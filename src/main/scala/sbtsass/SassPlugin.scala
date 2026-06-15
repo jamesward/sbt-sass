@@ -2,7 +2,7 @@ package sbtsass
 
 import sbt._
 import sbt.Keys._
-import sbt.librarymanagement.ConfigRef
+import sbtcompat.PluginCompat._
 
 import de.larsgrefer.sass.embedded.SassCompilerFactory
 
@@ -14,20 +14,11 @@ import java.net.URLClassLoader
  * Adds a hidden `sass` Ivy configuration. WebJar dependencies declared with
  * the `Sass` scope are made available to SCSS via [[WebJarsScssImporter]],
  * so `@import "bootstrap/scss/functions";` resolves against the bootstrap
- * webjar JAR on the build classpath (trying SCSS suffix conventions like
- * `_functions.scss`).
+ * webjar JAR on the build classpath.
  *
- * Generated CSS lands in Compile / resourceManaged / "public", which the
- * runtime serves under /assets/.
- *
- * The `% Set(Sass, ...)` syntax used in `build.sbt` for declaring Sass-scoped
- * WebJar deps is provided by the `sbt-webjars` plugin's `ModuleIDOps`
- * extension. Add `sbt-webjars` alongside this plugin if you want that
- * sugar; otherwise use the plain string form, e.g.
- *   `"org.webjars.npm" % "bootstrap" % "5.3.8" % "sass"`.
+ * Generated CSS lands in Compile / resourceManaged / "public".
  */
 object SassPlugin extends AutoPlugin {
-  // Auto-enabled on every JVM project.
   override def trigger  = allRequirements
   override def requires = sbt.plugins.JvmPlugin
 
@@ -49,22 +40,11 @@ object SassPlugin extends AutoPlugin {
       sassTarget := (Compile / resourceManaged).value / "public",
 
       sassCompile := {
+        implicit val conv: xsbti.FileConverter = fileConverter.value
         val log    = streams.value.log
         val srcDir = sassSource.value
         val outDir = sassTarget.value
-        // Walk the resolved UpdateReport rather than `dependencyClasspath`
-        // so the code compiles unchanged on both sbt 1.x (where `Classpath`
-        // is `Seq[Attributed[File]]`) and sbt 2.x (where it is
-        // `Seq[Attributed[HashedVirtualFileRef]]` and would need a
-        // `FileConverter`). `ModuleReport.artifacts` stays `(Artifact, File)`
-        // in both versions.
-        val report = (Sass / update).value
-        val cpJars: Seq[File] = report
-          .configuration(ConfigRef(Sass.name))
-          .toSeq
-          .flatMap(_.modules.filterNot(_.evicted))
-          .flatMap(_.artifacts.map(_._2))
-          .distinct
+        val cpJars = toFiles((Sass / dependencyClasspath).value)
 
         if (!srcDir.exists) {
           log.info(s"[sass] no SCSS sources at $srcDir, skipping")
@@ -75,9 +55,6 @@ object SassPlugin extends AutoPlugin {
           val compiler = SassCompilerFactory.bundled()
           try {
             compiler.registerImporter(new WebJarsScssImporter(loader))
-            // Emit source maps so DevTools can show SCSS line numbers, and
-            // inline the SCSS sources so the .map is self-contained (no extra
-            // request per partial).
             compiler.setGenerateSourceMaps(true)
             compiler.setSourceMapIncludeSources(true)
             val entries = (srcDir ** "*.scss").get().filterNot(_.getName.startsWith("_"))
@@ -87,8 +64,6 @@ object SassPlugin extends AutoPlugin {
               val map = file(out.getAbsolutePath + ".map")
               IO.createDirectory(out.getParentFile)
               val result = compiler.compileFile(src)
-              // Append the sourceMappingURL trailer so browsers know where to
-              // find the .map (sass-embedded does not emit it by default).
               IO.write(out, result.getCss + s"\n/*# sourceMappingURL=${map.getName} */\n")
               val sourceMap = Option(result.getSourceMap).filter(_.nonEmpty)
               sourceMap.foreach(IO.write(map, _))

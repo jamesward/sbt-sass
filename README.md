@@ -1,107 +1,92 @@
 # sbt-sass
 
 An sbt plugin that compiles SCSS to CSS at build time using
-[dart-sass-embedded](https://github.com/sass/dart-sass-embedded) (no Node
-required), with a custom importer that resolves `@import` statements
-against [WebJar](https://www.webjars.org/) JARs on the build classpath.
+[dart-sass-embedded](https://github.com/sass/dart-sass) (no Node required),
+with a custom importer that resolves `@import` / `@use` statements against
+[WebJar](https://www.webjars.org/) JARs on the build classpath.
 
-Supports cross-publishing for **sbt 1.x** and **sbt 2.x**.
+Supports **sbt 1.x** and **sbt 2.x**.
 
 ## Install
 
 In `project/plugins.sbt`:
 
 ```scala
-addSbtPlugin("org.webjars" % "sbt-sass" % "<version>")
+addSbtPlugin("com.jamesward" % "sbt-sass" % "<version>")
 ```
 
-The plugin is auto-enabled on every JVM project — you do **not** need
-`enablePlugins(SassPlugin)`.
+The plugin auto-enables on every JVM project — no `enablePlugins(...)` needed.
 
-If you also want the `% Set(Sass, WebJar, Test)` syntax shown below for
-multi-scoped WebJar dependencies, add
-[`sbt-webjars`](https://github.com/webjars/sbt-webjars) alongside it. Without
-`sbt-webjars`, declare Sass-scoped deps with the plain string form
-(`% "sass"`).
+## Usage
 
-## Use
+1. Put SCSS sources in `src/main/scss/`:
 
-1. Put your SCSS sources in `src/main/scss` (configurable via `sassSource`).
-2. Declare WebJar dependencies with the `Sass` scope (and optionally
-   `WebJar` / `Test` if you also use `sbt-webjars`):
-
-   ```scala
-   // With sbt-webjars's Set(...) sugar:
-   libraryDependencies +=
-     "org.webjars.npm" % "bootstrap" % "5.3.8" % Set(WebJar, Sass, Test)
-
-   // Or, with plain sbt configuration strings:
-   libraryDependencies +=
-     "org.webjars.npm" % "bootstrap" % "5.3.8" % "sass"
+   ```
+   src/main/scss/app.scss
    ```
 
-3. Author SCSS that imports from those WebJars — the artifact name is the
-   first path segment:
+2. Add WebJar dependencies scoped to `"sass"`:
+
+   ```scala
+   libraryDependencies += "org.webjars.npm" % "bootstrap" % "5.3.8" % "sass"
+   ```
+
+   Or, if you also use [sbt-webjars](https://github.com/webjars/sbt-webjars):
+
+   ```scala
+   libraryDependencies += "org.webjars.npm" % "bootstrap" % "5.3.8" % Set(WebJar, Sass, Test)
+   ```
+
+3. Import from WebJars using the artifact name as the first path segment:
 
    ```scss
    // src/main/scss/app.scss
    @import "bootstrap/scss/bootstrap";
    ```
 
-4. CSS is generated into `Compile / resourceManaged / "public"` and added
-   to the resource generators automatically, so it ends up on the
-   classpath at runtime under `/public/...`. Source maps are emitted next
-   to the CSS, with the SCSS sources inlined so DevTools can show them
-   without extra requests.
+4. Run `compile` — CSS appears at runtime on the classpath under `public/`:
 
-## Settings & tasks
+   ```
+   target/.../resource_managed/main/public/app.css
+   target/.../resource_managed/main/public/app.css.map
+   ```
 
-| Key             | Type             | Default                                          |
-|-----------------|------------------|--------------------------------------------------|
-| `Sass`          | `Configuration`  | hidden Ivy config the plugin adds                |
-| `sassSource`    | `File`           | `src/main/scss`                                  |
-| `sassTarget`    | `File`           | `Compile / resourceManaged / "public"`           |
-| `sassCompile`   | `Seq[File]`      | task that compiles SCSS, wired into resources    |
+   Source maps are emitted with SCSS sources inlined for DevTools.
 
-`sassCompile` is added to `Compile / resourceGenerators`, so a normal
-`compile` (or `package`, `run`, etc.) will produce CSS without extra
-configuration. If you'd like to invoke it directly:
+## Settings & Tasks
 
-```
-sbt sassCompile
-```
+| Key           | Type        | Default                                |
+|---------------|-------------|----------------------------------------|
+| `Sass`        | `Configuration` | Hidden Ivy config added by the plugin |
+| `sassSource`  | `File`      | `src/main/scss`                        |
+| `sassTarget`  | `File`      | `Compile / resourceManaged / "public"` |
+| `sassCompile` | `Seq[File]` | Task that compiles SCSS → CSS          |
 
-## How `@import` resolution works
+`sassCompile` is wired into `Compile / resourceGenerators`, so `compile`,
+`run`, `package`, etc. all trigger SCSS compilation automatically.
 
-`WebJarsScssImporter` overrides dart-sass's `ClasspathImporter` so it can
-walk the `META-INF/resources/webjars/<artifact>/<version>/` paths inside
-WebJar JARs. It tries the standard SCSS file-resolution order for each
-import:
+## How WebJar imports work
+
+The plugin ships `WebJarsScssImporter`, which resolves imports using
+[webjars-locator-core](https://github.com/webjars/webjars-locator-core).
+For each import it tries the standard SCSS file-resolution order:
 
 1. `_<name>.scss`
 2. `<name>.scss`
 3. `<name>/_index.scss`
 4. `<name>/index.scss`
 
-For artifact-prefixed imports (the first path segment is a WebJar
-artifact name) it uses
-[`WebJarAssetLocator`](https://github.com/webjars/webjars-locator-core)
-to find the right path inside the jar. For relative imports between SCSS
-files within a WebJar (which dart-sass canonicalizes against the
-containing `jar:file:` URL) it probes those same suffix variants on the
-absolute URL.
+This means `@import "bootstrap/scss/functions"` resolves to
+`_functions.scss` inside the bootstrap WebJar JAR — just like a
+local Sass install would.
 
 ## Development
 
+```bash
+./sbt +compile        # cross-build for sbt 1.x and 2.x
+./sbt scripted        # run integration tests
+./sbt +publishLocal   # install locally for both sbt versions
 ```
-./sbt +compile     # cross-build for sbt 1.x and sbt 2.x
-./sbt +test        # run tests across both
-./sbt +publishLocal
-```
-
-The `+` prefix triggers cross-building across `crossScalaVersions`, which
-in turn drives `pluginCrossBuild / sbtVersion` to flip between
-`1.12.x` / Scala 2.12 and `2.0.x` / Scala 3.
 
 ## License
 

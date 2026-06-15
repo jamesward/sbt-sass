@@ -1,6 +1,6 @@
-sbtPlugin    := true
+enablePlugins(SbtPlugin)
 name         := "sbt-sass"
-organization := "org.webjars"
+organization := "com.jamesward"
 
 scalaVersion := "2.12.20"
 
@@ -13,17 +13,17 @@ pluginCrossBuild / sbtVersion := {
   }
 }
 
+addSbtPlugin("com.github.sbt" % "sbt2-compat" % "0.1.0")
+
 libraryDependencies ++= Seq(
   "de.larsgrefer.sass" % "sass-embedded-host"    % "4.4.0",
   "de.larsgrefer.sass" % "sass-embedded-bundled" % "4.4.0",
-  // Required by dart-sass-java's bundled `WebjarsImporter` — not transitive
-  // through `sass-embedded-host`'s pom even though the class hard-references it.
   "org.webjars"        % "webjars-locator-core"  % "0.59",
 )
 
 licenses := Seq("MIT License" -> url("https://opensource.org/licenses/MIT"))
 
-homepage := Some(url("https://github.com/webjars/sbt-sass"))
+homepage := Some(url("https://github.com/jamesward/sbt-sass"))
 
 developers := List(
   Developer(
@@ -34,4 +34,13 @@ developers := List(
   )
 )
 
-ThisBuild / versionScheme := Some("semver-spec")
+javacOptions ++= Seq("-source", "17", "-target", "17")
+scalacOptions ++= (scalaBinaryVersion.value match {
+  case "2.12" => Seq.empty // Scala 2.12 cannot target > JDK 8
+  case _      => Seq("-release", "17")
+})
+
+scriptedLaunchOpts ++= Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+scriptedBufferLog := false
+
+versionScheme := Some("semver-spec")
