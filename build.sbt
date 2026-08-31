@@ -2,7 +2,7 @@ enablePlugins(SbtPlugin)
 name         := "sbt-sass"
 organization := "com.jamesward"
 
-scalaVersion := "3.8.4"
+scalaVersion := "3.9.0"
 
 crossScalaVersions := Seq("2.12.20", "3.8.4")
 
