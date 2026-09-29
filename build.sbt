@@ -16,7 +16,7 @@ pluginCrossBuild / sbtVersion := {
 addSbtPlugin("com.github.sbt" % "sbt2-compat" % "0.1.0")
 
 libraryDependencies ++= Seq(
-  "de.larsgrefer.sass" % "sass-embedded-host"    % "4.4.0",
+  "de.larsgrefer.sass" % "sass-embedded-host"    % "4.5.2",
   "de.larsgrefer.sass" % "sass-embedded-bundled" % "4.5.2",
   "org.webjars"        % "webjars-locator-core"  % "0.59",
 )
