@@ -2,22 +2,22 @@ enablePlugins(SbtPlugin)
 name         := "sbt-sass"
 organization := "com.jamesward"
 
-scalaVersion := "3.9.0"
+scalaVersion := "3.8.4"
 
-crossScalaVersions := Seq("2.12.20", "3.8.4")
+crossScalaVersions := Seq("2.12.21", "3.8.4")
 
 pluginCrossBuild / sbtVersion := {
   scalaBinaryVersion.value match {
-    case "2.12" => "1.12.11"
+    case "2.12" => "1.12.15"
     case _      => "2.0.0"
   }
 }
 
-addSbtPlugin("com.github.sbt" % "sbt2-compat" % "0.1.0")
+addSbtPlugin("com.github.sbt" % "sbt2-compat" % "0.2.0")
 
 libraryDependencies ++= Seq(
-  "de.larsgrefer.sass" % "sass-embedded-host"    % "4.5.2",
-  "de.larsgrefer.sass" % "sass-embedded-bundled" % "4.5.2",
+  "de.larsgrefer.sass" % "sass-embedded-host"    % "4.6.0",
+  "de.larsgrefer.sass" % "sass-embedded-bundled" % "4.6.0",
   "org.webjars"        % "webjars-locator-core"  % "0.59",
 )
 
@@ -53,4 +53,4 @@ Global / mcpPort := 5110
 // SkillsJars: extract agent Skills with `./sbt extractSkillsJars`
 skillsJarsOutputDir := Some(file(".kiro/skills"))
 
-libraryDependencies += "com.jamesward" % "skills" % "0.0.10" % Skills
+libraryDependencies += "com.jamesward" % "skills" % "0.0.11" % Skills
