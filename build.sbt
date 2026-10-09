@@ -46,9 +46,9 @@ scriptedBufferLog := false
 versionScheme := Some("semver-spec")
 
 // sbt-mcp (loopback-only: its tools can execute build tasks)
-Global / mcpEnabled := true
-Global / mcpHost := "127.0.0.1"
-Global / mcpPort := 5110
+ThisBuild / mcpEnabled := true
+ThisBuild / mcpHost := "127.0.0.1"
+ThisBuild / mcpPort := 5110
 
 // SkillsJars: extract agent Skills with `./sbt extractSkillsJars`
 skillsJarsOutputDir := Some(file(".kiro/skills"))
