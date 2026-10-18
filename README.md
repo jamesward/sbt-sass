@@ -83,9 +83,9 @@ local Sass install would.
 ## Development
 
 ```bash
-./sbt +compile        # cross-build for sbt 1.x and 2.x
-./sbt scripted        # run integration tests
-./sbt +publishLocal   # install locally for both sbt versions
+./sbta +compile        # cross-build for sbt 1.x and 2.x
+./sbta scripted        # run integration tests
+./sbta +publishLocal   # install locally for both sbt versions
 ```
 
 ## License
