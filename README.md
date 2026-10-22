@@ -19,10 +19,13 @@ The plugin auto-enables on every JVM project — no `enablePlugins(...)` needed.
 
 ## Usage
 
-1. Put SCSS sources in `src/main/scss/`:
+1. Put Sass sources in `src/main/scss/`. Both SCSS (`.scss`) and the
+   indented syntax (`.sass`) are supported; files starting with `_` are
+   partials and are not compiled on their own:
 
    ```
    src/main/scss/app.scss
+   src/main/scss/other.sass
    ```
 
 2. Add WebJar dependencies scoped to `"sass"`:
@@ -69,12 +72,13 @@ The plugin auto-enables on every JVM project — no `enablePlugins(...)` needed.
 
 The plugin ships `WebJarsScssImporter`, which resolves imports using
 [webjars-locator-core](https://github.com/webjars/webjars-locator-core).
-For each import it tries the standard SCSS file-resolution order:
+For each import it tries the standard Sass file-resolution order, with
+each name checked as `.sass`, `.scss`, then `.css`:
 
-1. `_<name>.scss`
-2. `<name>.scss`
-3. `<name>/_index.scss`
-4. `<name>/index.scss`
+1. `_<name>.{sass,scss,css}`
+2. `<name>.{sass,scss,css}`
+3. `<name>/_index.{sass,scss,css}`
+4. `<name>/index.{sass,scss,css}`
 
 This means `@import "bootstrap/scss/functions"` resolves to
 `_functions.scss` inside the bootstrap WebJar JAR — just like a
