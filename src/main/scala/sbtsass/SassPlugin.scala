@@ -57,10 +57,12 @@ object SassPlugin extends AutoPlugin {
             compiler.registerImporter(new WebJarsScssImporter(loader))
             compiler.setGenerateSourceMaps(true)
             compiler.setSourceMapIncludeSources(true)
-            val entries = (srcDir ** "*.scss").get().filterNot(_.getName.startsWith("_"))
+            // `.scss` (SCSS syntax) and `.sass` (indented syntax); dart-sass
+            // picks the syntax from the file extension.
+            val entries = (srcDir ** ("*.scss" || "*.sass")).get().filterNot(_.getName.startsWith("_"))
             entries.flatMap { src =>
               val rel = IO.relativize(srcDir, src).getOrElse(src.getName)
-              val out = outDir / rel.stripSuffix(".scss").concat(".css")
+              val out = outDir / (rel.substring(0, rel.lastIndexOf('.')) + ".css")
               val map = file(out.getAbsolutePath + ".map")
               IO.createDirectory(out.getParentFile)
               val result = compiler.compileFile(src)
