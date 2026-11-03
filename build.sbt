@@ -16,8 +16,8 @@ pluginCrossBuild / sbtVersion := {
 addSbtPlugin("com.github.sbt" % "sbt2-compat" % "0.2.0")
 
 libraryDependencies ++= Seq(
-  "de.larsgrefer.sass" % "sass-embedded-host"    % "4.6.1",
-  "de.larsgrefer.sass" % "sass-embedded-bundled" % "4.6.1",
+  "de.larsgrefer.sass" % "sass-embedded-host"    % "4.7.0",
+  "de.larsgrefer.sass" % "sass-embedded-bundled" % "4.7.0",
   "org.webjars"        % "webjars-locator-core"  % "0.59",
 )
 
@@ -48,4 +48,4 @@ versionScheme := Some("semver-spec")
 // SkillsJars: extract agent Skills with `./sbta extractSkillsJars`
 skillsJarsOutputDir := Some(file(".kiro/skills"))
 
-libraryDependencies += "com.jamesward" % "skills" % "0.0.18" % Skills
+libraryDependencies += "com.jamesward" % "skills" % "0.0.22" % Skills
