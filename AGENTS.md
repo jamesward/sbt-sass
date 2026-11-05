@@ -17,7 +17,7 @@ This plugin supports sbt 1 and sbt 2 and keeps both: most builds that use it are
 
 `pluginCrossBuild / sbtVersion` in `build.sbt` sets the sbt each published artifact compiles against, which is the oldest sbt its users can run (zen-of-projects "sbt Plugin Projects"). These are floors, not dependencies: the maintenance routine leaves them alone.
 
-- **sbt 1 (Scala 2.12): `1.12.15`.** The version it was compiled against when the floors were recorded (2026-11-04). It hasn't been tested against an older sbt 1, so it isn't lowered.
+- **sbt 1 (Scala 2.12): `1.9.0`.** The oldest sbt 1 that can use this plugin at all: it depends on `sbt2-compat`, whose sbt 1 build needs 1.9.0 or later (older sbt can't resolve Maven-style plugin artifacts from Maven Central), and sbt2-compat's own setup uses this floor. The scripted test `sbt-floor` (a copy of `simple` with `sbt.version=1.9.0`) runs the plugin on it; keep that fixture's sbt at the floor when the maintenance routine bumps the others.
 - **sbt 2 (Scala 3): `2.0.0`**, the first sbt 2 release, so every sbt 2 user can use it.
 
 Raise a floor only when the plugin needs an API the floor lacks: say which in the PR, label it `needs-human` (it drops users on older sbt), and update this section.
